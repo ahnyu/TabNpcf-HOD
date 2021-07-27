@@ -147,6 +147,7 @@ wpdata=data/wp.dat                  #wp measurement to fit, we read second colum
                                     #we do not check if bins are match to the paircount.
                                     #list all wp measurements you want to use as this order:
                                     #LRG, ELG, QSO, LXE, LXQ, EXQ.
+
 xildata=data/xil.dat                #xil measurements to fit, save as wp
 wp3data=data/wp3.dat                #wp3 measurements to fit, we read fourth column by default
 xi3data=data/xi3.dat                #xi3 measurements to fit, we read fourth column by default
@@ -208,30 +209,5 @@ Set `[QSO] [[model]] sate=2` in .ini file for MCMC, `Nsate(QSO)=(Mhalo/M1)**alph
 ### Multi-tracer
 
 If you set all sate and cent to 1, it will use Shadab et al. [MTHOD](https://arxiv.org/abs/1910.05095) ELG(erf model) (18 parameters in total), if you change ELG cent to 2, it will use [MTHOD](https://arxiv.org/abs/1910.05095) ELG(HMQ) model (19 parameters in total).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
