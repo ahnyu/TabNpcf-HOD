@@ -1,15 +1,14 @@
 import numpy as np
 
 ###analytical RR
-def RR(N,wp2):
-    boxsize=2000.0
-    rpbins=np.logspace(wp2['logrpmin'][0],wp2['logrpmax'][0],wp2['nrpbins'][0]+1)
-    pibins=np.linspace(0,wp2['pimax'][0],wp2['npibins'][0]+1)
+def RR(N1,N2,binParams,boxsize):
+    rpbins=np.logspace(binParams['rppi']['rpmin'],binParams['rppi']['rpmax'],binParams['rppi']['nrpbins']+1)
+    pibins=np.linspace(0,binParams['rppi']['npibins'],binParams['rppi']['npibins']+1)
     boxvec=np.array([boxsize,boxsize,boxsize])
     V = np.pi * np.outer(rpbins**2, (2.*pibins))
     dV = np.diff(np.diff(V, axis=0), axis=1)
     dVd=dV/boxvec.prod()
-    r1r2=N**2*dVd
+    r1r2=N1*N2*dVd
     return r1r2
 
 ###analytical RRR

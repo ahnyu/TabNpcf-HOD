@@ -10,99 +10,221 @@ args=parser.parse_args()
 
 config=ConfigObj(args.inifile)
 
-settings=config['settings']
-dofitting=settings.as_bool('doFitting')
-HODcatalog=settings.as_bool('HODcatalog')
+setParams={}
+simParams={}
+LRG={'params':{},'wpidx':{},'xi0dx':{},'xi2dx':{},'wp3idx':{},'xi3idx':{},'model':{}}
+ELG={'params':{},'wpidx':{},'xi0dx':{},'xi2dx':{},'wp3idx':{},'xi3idx':{},'model':{}}
+QSO={'params':{},'wpidx':{},'xi0dx':{},'xi2dx':{},'wp3idx':{},'xi3idx':{},'model':{}}
+LXE={'wpidx':{},'xi0idx':{},'xi2idx':{}}
+LXQ={'wpidx':{},'xi0idx':{},'xi2idx':{}}
+EXQ={'wpidx':{},'xi0idx':{},'xi2idx':{}}
+pathIn={}
+binParams={'tab':{},'rppi':{},'smu':{},'triXY':{},'tri3D':{}}
+
+tmp=config['setParams']
+tmpkey=tmp.keys()
+for i in range(len(tmpkey)):
+    setParams[tmpkey[i]]=tmp.as_bool(tmpkey[i])
+print(setParams)
+
+tmp=config['simParams']
+tmpkey=tmp.keys()
+for i in range(2):
+    simParams[tmpkey[i]]=tmp.as_float(tmpkey[i])
+print(simParams)
+
+if(setParams['useLRG']):
+    tmp=config['LRG']['params']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        tmp2=tmp[tmpkey[i]]
+        tmpkey2=tmp2.keys()
+        LRG['params'][tmpkey[i]]={}
+        for j in range(len(tmpkey2)):
+            LRG['params'][tmpkey[i]][tmpkey2[j]]=tmp2.as_float(tmpkey2[j])
+
+    tmp=config['LRG']['model']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        LRG['model'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+
+    if(setParams['useWp']):
+        tmp=config['LRG']['wpidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LRG['wpidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXil']):
+        tmp=config['LRG']['xiidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LRG['xiidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useWp3']):
+        tmp=config['LRG']['wp3idx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LRG['wp3idx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXi3']):
+        tmp=config['LRG']['xi3idx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LRG['xi3idx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
 
 
-if(dofitting):
-    fit_dic=config['fit']
-    ###params###
-    params_dic=fit_dic['params']
-    params_names=params_dic.keys()
-    params=np.empty(len(params_names),dtype={'names':('min','max','init'),'formats':('float32','float32','float32')})
-    for i in range(len(params_names)):
-        params['min'][i]=params_dic[params_names[i]]['min']
-        params['max'][i]=params_dic[params_names[i]]['max']
-        params['init'][i]=params_dic[params_names[i]]['init']
+    print(LRG)
 
-    ###use2pt###
-    use2pt_dic=fit_dic['use2pt']
-    wp2_dic=use2pt_dic['wp2']
-    wp2_names=wp2_dic.keys()
-    wp2=np.zeros(1,dtype={'names':wp2_names,'formats':[np.bool_,np.bool_,np.bool_,'f4','f4',np.int,np.int,'f4']})
-    wp2['usewp2']=wp2_dic.as_bool('usewp2')
-    if(wp2['usewp2']):
-        for i in range(1,len(wp2_names)):
-            if(wp2[wp2_names[i]].dtype==bool):
-                wp2[wp2_names[i]]=wp2_dic.as_bool(wp2_names[i])
-            else:
-                wp2[wp2_names[i]]=wp2_dic[wp2_names[i]]
-            print(wp2_names[i],wp2[wp2_names[i]])
-        ###paircounts###
-        if(wp2['doPaircounts']):
-            pc_dic=config['paircounts']
-            ###paircounts common###
-            pc_common_dic=pc_dic['common']
-            pc_common_names=pc_common_dic.keys()
-            pc_common=np.empty(1,dtype={'names':pc_common_names,'formats':[np.int,'f4',np.bool_]})
-            for i in range(len(pc_common_names)):
-                pc_common[pc_common_names[i]]=pc_common_dic[pc_common_names[i]]
-            ###paircountsOut###
-            if(pc_common['savepc']):
-                paircountsOut=pc_dic['paircountsOut']
-            ###simulationIn###
-            simulationIn=pc_dic['simulationIn']
-        if(wp2['inputPaircounts']):
-            paircountsIn=config['readCounts']['paircountsIn']
-    ###use3pt###
-    use3pt_dic=fit_dic['use3pt']
-    xi3_dic=use3pt_dic['xi3']
-    xi3_names=xi3_dic.keys()
-    xi3=np.zeros(1,dtype={'names':xi3_names,'formats':[np.bool_,np.bool_,np.int]})
-    xi3['usexi3']=xi3_dic.as_bool('usexi3')
-    if(xi3['usexi3']):
-        for i in range(1,len(xi3_names)):
-            if(xi3[xi3_names[i]].dtype==bool):
-                xi3[xi3_names[i]]=xi3_dic.as_bool(xi3_names[i])
-            else:
-                xi3[xi3_names[i]]=xi3_dic[xi3_names[i]]
-        if(xi3['inputTrianglecounts']):
-            triangleIn=config['readCounts']['trianglecountsIn']
-    ###fit common###
-    fit_common_dic=fit_dic['common']
-    fit_common_names=fit_common_dic.keys()
-    fit_common=np.ones(1,dtype={'names':fit_common_names,'formats':[np.int,np.int]})
-    for i in range(len(fit_common_names)):
-        if(fit_common[fit_common_names[i]].dtype==bool):
-            fit_common[fit_common_names[i]]=fit_common_dic.as_bool(fit_common_names[i])
-        else:
-            fit_common[fit_common_names[i]]=fit_common_dic[fit_common_names[i]]
-    ###chainsOut###
-    chainsOut=fit_dic['chainsOut']
-    ###covIn###
-    covIn=fit_dic['covIn']
-    ###data2In###
-    data2In=fit_dic['data2In']
-    ###data3In###
-    data3In=fit_dic['data3In']
-###massbin setting###
-if(wp2['inputPaircounts'] or xi3['inputTrianglecounts']):
-    massbinmidIn=config['readCounts']['massbinmidIn']
-    nummassbinhaloIn=config['readCounts']['nummassbinhaloIn']
-    nummassbinpartIn=config['readCounts']['nummassbinpartIn']
-###HODcat###
-if(HODcatalog):
-    HODcat_dic=config['HODcat']
-    HODcat_names=HODcat_dic.keys()
-    HODcat=np.empty(1,dtype={'names':HODcat_names,'formats':['f4','f4','f4','f4','f4']})
-    for i in range(len(HODcat_names)):
-        HODcat[HODcat_names[i]]=HODcat_dic[HODcat_names[i]]
+if(setParams['useELG']):
+    tmp=config['ELG']['params']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        tmp2=tmp[tmpkey[i]]
+        tmpkey2=tmp2.keys()
+        ELG['params'][tmpkey[i]]={}
+        for j in range(len(tmpkey2)):
+            ELG['params'][tmpkey[i]][tmpkey2[j]]=tmp2.as_float(tmpkey2[j])
+   
+    tmp=config['ELG']['model']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        ELG['model'][tmpkey[i]]=tmp.as_int(tmpkey[i])
     
-###cosmology###
-cosmo_dic=config['cosmology']
-cosmo_names=cosmo_dic.keys()
-cosmo=np.empty(1,dtype={'names':cosmo_names,'formats':['f4','f4','f8']})
-for i in range(len(cosmo_names)):
-    cosmo[cosmo_names[i]]=cosmo_dic[cosmo_names[i]]
+    if(setParams['useWp']):
+        tmp=config['ELG']['wpidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            ELG['wpidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXil']):
+        tmp=config['ELG']['xiidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            ELG['xiidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useWp3']):
+        tmp=config['ELG']['wp3idx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            ELG['wp3idx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXi3']):
+        tmp=config['ELG']['xi3idx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            ELG['xi3idx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+
+   
+    print(ELG)
+
+if(setParams['useQSO']):
+    tmp=config['QSO']['params']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        tmp2=tmp[tmpkey[i]]
+        tmpkey2=tmp2.keys()
+        QSO['params'][tmpkey[i]]={}
+        for j in range(len(tmpkey2)):
+            QSO['params'][tmpkey[i]][tmpkey2[j]]=tmp2.as_float(tmpkey2[j])
+
+    tmp=config['QSO']['model']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        QSO['model'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    
+    if(setParams['useWp']):
+        tmp=config['QSO']['wpidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            QSO['wpidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXil']):
+        tmp=config['QSO']['xiidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            QSO['xiidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useWp3']):
+        tmp=config['QSO']['wp3idx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            QSO['wp3idx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXi3']):
+        tmp=config['QSO']['xi3idx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            QSO['xi3idx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+
+   
+    print(QSO)
+
+if(setParams['useLXE']):
+    if(setParams['useWp']):
+        tmp=config['LXE']['wpidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LXE['wpidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXil']):
+        tmp=config['LXE']['xiidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LXE['xiidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    print(LXE)
+if(setParams['useLXQ']):
+    if(setParams['useWp']):
+        tmp=config['LXQ']['wpidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LXQ['wpidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXil']):
+        tmp=config['LXQ']['xiidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            LXQ['xiidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    print(LXQ)
+if(setParams['useEXQ']):
+    if(setParams['useWp']):
+        tmp=config['EXQ']['wpidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            EXQ['wpidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    if(setParams['useXil']):
+        tmp=config['EXQ']['xiidx']
+        tmpkey=tmp.keys()
+        for i in range(len(tmpkey)):
+            EXQ['xiidx'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+    print(EXQ)
+
+
+tmp=config['pathIn']
+tmpkey=tmp.keys()
+for i in range(len(tmpkey)):
+    pathIn[tmpkey[i]]=tmp[tmpkey[i]]
+print(pathIn)
+
+tmp=config['binParams']['tab']
+tmpkey=tmp.keys()
+for i in range(len(tmpkey)):
+    binParams['tab'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+if(setParams['useWp']):
+    tmp=config['binParams']['rppi']
+    binParams['rppi']['nrpbins']=tmp.as_int('nrpbins')
+    binParams['rppi']['npibins']=tmp.as_int('npibins')
+    binParams['rppi']['rpmin']=tmp.as_float('rpmin')
+    binParams['rppi']['rpmax']=tmp.as_float('rpmax')
+if(setParams['useXil']):
+    tmp=config['binParams']['smu']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        binParams['smu'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+if(setParams['useWp3']):
+    tmp=config['binParams']['triXY']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        binParams['triXY'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+if(setParams['useXi3']):
+    tmp=config['binParams']['tri3D']
+    tmpkey=tmp.keys()
+    for i in range(len(tmpkey)):
+        binParams['tri3D'][tmpkey[i]]=tmp.as_int(tmpkey[i])
+ 
+print(binParams)
+
+
+
+
+
+
 

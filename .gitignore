@@ -1,0 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+# Jupyter Notebook
+.ipynb_checkpoints
+# PDF,png
+*.pdf
+*.png
+# Vim tmp
+*.swp
+# Data
+*.dat
+*.h5
+# test inifile
+local.ini
+
